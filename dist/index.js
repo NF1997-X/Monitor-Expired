@@ -423,12 +423,17 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  if (!process.env.VERCEL) {
+    const port = parseInt(process.env.PORT || "5000", 10);
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();
+export {
+  app
+};
