@@ -1,0 +1,99 @@
+{
+  "name": "Monitor Expired",
+  "short_name": "MonitorExpired",
+  "description": "Track food expiration dates with dark glass theme, calendar view, countdown warnings, and smart notifications to reduce food waste.",
+  "theme_color": "#1e293b",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "en-US",
+  "categories": ["food", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Food Item",
+      "short_name": "Add Item",
+      "description": "Quickly add a new food item",
+      "url": "/?action=add",
+      "icons": [
+        {
+          "src": "/icons/add-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "View Calendar",
+      "short_name": "Calendar",
+      "description": "View expiration calendar",
+      "url": "/?action=calendar",
+      "icons": [
+        {
+          "src": "/icons/calendar-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share-target/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "prefer_related_applications": false
+}

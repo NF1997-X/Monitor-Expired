@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Test - Monitor Expired</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #1e293b;
+        }
+        button { 
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { 
+            background: #2563eb;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #166534; color: #dcfce7; }
+        .error { background: #7f1d1d; color: #fecaca; }
+        .info { background: #1e3a8a; color: #dbeafe; }
+    </style>
+</head>
+<body>
+    <h1>🍎 PWA Test - Monitor Expired</h1>
+    
+    <div class="test-section">
+        <h3>Installation Status</h3>
+        <div id="install-status" class="status info">Checking...</div>
+        <button id="install-btn" onclick="installApp()" style="display:none;">Install App</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Service Worker</h3>
+        <div id="sw-status" class="status info">Checking...</div>
+        <button onclick="updateServiceWorker()">Update Service Worker</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Notifications</h3>
+        <div id="notification-status" class="status info">Checking...</div>
+        <button onclick="requestNotifications()">Request Notifications</button>
+        <button onclick="testNotification()">Test Notification</button>
+    </div>
+
+    <div class="test-section">
+        <h3>PWA Features</h3>
+        <div id="pwa-features" class="status info"></div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+
+        // Check installation status
+        function checkInstallStatus() {
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                         window.navigator.standalone ||
+                         document.referrer.includes('android-app://');
+                         
+            const statusDiv = document.getElementById('install-status');
+            if (isPWA) {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ App is installed and running as PWA';
+            } else {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = '📱 Running in browser - install available';
+            }
+        }
+
+        // Check Service Worker
+        function checkServiceWorker() {
+            const statusDiv = document.getElementById('sw-status');
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = '✅ Service Worker registered successfully';
+                    })
+                    .catch(error => {
+                        statusDiv.className = 'status error';
+                        statusDiv.textContent = '❌ Service Worker registration failed: ' + error.message;
+                    });
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Service Worker not supported';
+            }
+        }
+
+        // Check notifications
+        function checkNotifications() {
+            const statusDiv = document.getElementById('notification-status');
+            
+            if ('Notification' in window) {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = `📢 Notifications supported. Permission: ${Notification.permission}`;
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Notifications not supported';
+            }
+        }
+
+        // Check PWA features
+        function checkPWAFeatures() {
+            const featuresDiv = document.getElementById('pwa-features');
+            const features = [];
+            
+            if ('serviceWorker' in navigator) features.push('✅ Service Worker');
+            else features.push('❌ Service Worker');
+            
+            if ('Notification' in window) features.push('✅ Notifications');
+            else features.push('❌ Notifications');
+            
+            if ('PushManager' in window) features.push('✅ Push Notifications');
+            else features.push('❌ Push Notifications');
+            
+            if ('BackgroundSync' in window || 'serviceWorker' in navigator) features.push('✅ Background Sync');
+            else features.push('❌ Background Sync');
+            
+            if (window.matchMedia('(display-mode: standalone)').matches) features.push('✅ Standalone Mode');
+            else features.push('📱 Browser Mode');
+            
+            featuresDiv.innerHTML = features.join('<br>');
+        }
+
+        // Install app
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    document.getElementById('install-btn').style.display = 'none';
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        // Request notifications
+        async function requestNotifications() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                checkNotifications();
+            }
+        }
+
+        // Test notification
+        function testNotification() {
+            if (Notification.permission === 'granted') {
+                new Notification('PWA Test Notification', {
+                    body: 'This is a test notification from Monitor Expired PWA',
+                    icon: '/icons/icon-192x192.png',
+                    badge: '/icons/icon-72x72.png',
+                    vibrate: [100, 50, 100]
+                });
+            } else {
+                alert('Notifications not permitted. Please enable notifications first.');
+            }
+        }
+
+        // Update Service Worker
+        function updateServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => registration.update());
+                    alert('Service Worker update requested');
+                });
+            }
+        }
+
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = 'inline-block';
+        });
+
+        // App installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            checkInstallStatus();
+        });
+
+        // Initialize checks
+        window.addEventListener('load', () => {
+            checkInstallStatus();
+            checkServiceWorker();
+            checkNotifications();
+            checkPWAFeatures();
+        });
+    </script>
+</body>
+</html>
