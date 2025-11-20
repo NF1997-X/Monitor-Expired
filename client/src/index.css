@@ -229,3 +229,59 @@
     transform: scale(1.1);
   }
 }
+
+/* PWA specific styles */
+.pwa-mode {
+  /* Remove any browser-specific padding/margins when in PWA mode */
+  --pwa-safe-area-top: env(safe-area-inset-top);
+  --pwa-safe-area-bottom: env(safe-area-inset-bottom);
+  --pwa-safe-area-left: env(safe-area-inset-left);
+  --pwa-safe-area-right: env(safe-area-inset-right);
+}
+
+.pwa-mode .main-content {
+  /* Adjust content for device safe areas */
+  padding-top: var(--pwa-safe-area-top, 0);
+  padding-bottom: var(--pwa-safe-area-bottom, 0);
+  padding-left: var(--pwa-safe-area-left, 0);
+  padding-right: var(--pwa-safe-area-right, 0);
+}
+
+/* PWA install button styles */
+.pwa-install-button {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  animation: notification-glow 2s ease-in-out infinite;
+}
+
+/* Hide elements that shouldn't show in PWA mode */
+.browser-only {
+  display: block;
+}
+
+.pwa-mode .browser-only {
+  display: none !important;
+}
+
+/* PWA splash screen support */
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+  
+  /* Disable text selection in PWA mode for better native feel */
+  .pwa-disable-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+/* iOS PWA status bar */
+@supports (-webkit-touch-callout: none) {
+  .pwa-mode {
+    padding-top: env(safe-area-inset-top);
+  }
+}
