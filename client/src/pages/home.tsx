@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -28,6 +28,7 @@ import ProfileModal from "@/components/profile-modal";
 import DescriptionModal from "@/components/description-modal";
 import PasswordModal from "@/components/password-modal";
 import Notification from "@/components/notification";
+import ThemeSwitcher from "@/components/theme-switcher";
 import {
   requestNotificationPermission,
   scheduleExpiryNotifications,
@@ -62,6 +63,31 @@ export default function Home() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Create BroadcastChannel for cross-tab communication
+  const broadcastChannel = useRef<BroadcastChannel | null>(null);
+
+  // Initialize BroadcastChannel for cross-tab communication
+  useEffect(() => {
+    if (typeof BroadcastChannel !== 'undefined') {
+      broadcastChannel.current = new BroadcastChannel('foodtracker-sync');
+      
+      // Listen for messages from other tabs
+      broadcastChannel.current.onmessage = (event) => {
+        if (event.data.type === 'notification') {
+          showNotification(event.data.message, event.data.notificationType);
+        } else if (event.data.type === 'data-change') {
+          // Sync data when changes occur in other tabs
+          queryClient.invalidateQueries({ queryKey: ['/api/food-items'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/food-items/trash'] });
+        }
+      };
+      
+      return () => {
+        broadcastChannel.current?.close();
+      };
+    }
+  }, [queryClient]);
 
   // Request notification permission when app opens
   useEffect(() => {
@@ -166,10 +192,7 @@ export default function Home() {
 
       // Show 3-day warning notifications
       threeDayItems.forEach((item) => {
-        showNotification(`${item.name} expires in 3 days!`, "warning-3day");
-      });
-      threeDayItems.forEach((item) => {
-        showNotification(`Please double check again !`, "warning-3day");
+        showNotification(`${item.name} expires in 3 days! Please double check again.`, "warning-3day");
       });
       // Show 8-day warning notifications
       eightDayItems.forEach((item) => {
@@ -177,13 +200,7 @@ export default function Home() {
       });
       // Show 15-day warning notifications
       fifteenDayItems.forEach((item) => {
-        showNotification(`${item.name} expires in 15 days`, "warning-15day");
-      });
-      fifteenDayItems.forEach((item) => {
-        showNotification(
-          `Stand by dont forget to stock out !`,
-          "warning-15day",
-        );
+        showNotification(`${item.name} expires in 15 days. Stand by, don't forget to stock out!`, "warning-15day");
       });
     }
   }, [foodItems]);
@@ -196,7 +213,11 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/food-items"] });
-      showNotification("Item added successfully", "success");
+      showNotification("Item added successfully", "success", true);
+      // Broadcast data change to other tabs
+      if (broadcastChannel.current) {
+        broadcastChannel.current.postMessage({ type: 'data-change' });
+      }
     },
     onError: () => {
       showNotification("Failed to add item", "error");
@@ -213,7 +234,11 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/food-items"] });
-      showNotification("Item updated successfully", "success");
+      showNotification("Item updated successfully", "success", true);
+      // Broadcast data change to other tabs
+      if (broadcastChannel.current) {
+        broadcastChannel.current.postMessage({ type: 'data-change' });
+      }
     },
     onError: (error: any) => {
       const message = error?.message || "Failed to update item";
@@ -230,7 +255,11 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/food-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/food-items/trash"] });
-      showNotification("Item moved to trash", "info");
+      showNotification("Item moved to trash", "info", true);
+      // Broadcast data change to other tabs
+      if (broadcastChannel.current) {
+        broadcastChannel.current.postMessage({ type: 'data-change' });
+      }
     },
     onError: (error: any) => {
       const message = error?.message || "Failed to delete item";
@@ -250,7 +279,11 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/food-items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/food-items/trash"] });
-      showNotification("Item restored", "success");
+      showNotification("Item restored", "success", true);
+      // Broadcast data change to other tabs
+      if (broadcastChannel.current) {
+        broadcastChannel.current.postMessage({ type: 'data-change' });
+      }
     },
     onError: () => {
       showNotification("Failed to restore item", "error");
@@ -268,7 +301,11 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/food-items/trash"] });
-      showNotification("Item permanently deleted", "warning");
+      showNotification("Item permanently deleted", "warning", true);
+      // Broadcast data change to other tabs
+      if (broadcastChannel.current) {
+        broadcastChannel.current.postMessage({ type: 'data-change' });
+      }
     },
     onError: () => {
       showNotification("Failed to permanently delete item", "error");
@@ -286,7 +323,11 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/food-items/trash"] });
-      showNotification("Trash cleared", "warning");
+      showNotification("Trash cleared", "warning", true);
+      // Broadcast data change to other tabs
+      if (broadcastChannel.current) {
+        broadcastChannel.current.postMessage({ type: 'data-change' });
+      }
     },
     onError: () => {
       showNotification("Failed to clear trash", "error");
@@ -339,9 +380,19 @@ export default function Home() {
       | "warning-3day"
       | "warning-8day"
       | "warning-15day",
+    broadcast: boolean = false
   ) => {
     const id = Date.now().toString();
     setNotifications((prev) => [...prev, { id, message, type }]);
+    
+    // Broadcast notification to other tabs if requested
+    if (broadcast && broadcastChannel.current) {
+      broadcastChannel.current.postMessage({
+        type: 'notification',
+        message,
+        notificationType: type
+      });
+    }
   };
 
   const removeNotification = (id: string) => {
@@ -850,6 +901,9 @@ export default function Home() {
         onClose={() => setIsProfileOpen(false)}
         onClearAllData={handleClearAllData}
       />
+
+      {/* Theme Switcher */}
+      <ThemeSwitcher />
     </div>
   );
 }

@@ -9,6 +9,10 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "28px",
+        ios: "16px",
       },
       colors: {
         background: "var(--background)",

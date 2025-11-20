@@ -3,6 +3,26 @@
 Ringkasan singkat / Short summary:
 Monitor-Expired is a full‑stack Vite + React frontend and Express backend app that tracks food items and their expiry dates. The backend uses Drizzle ORM (Postgres / Neon) and is configured to run both as a local server and as a serverless function on Vercel.
 
+**✨ NEW: iOS-Style Design with 6 Beautiful Themes!**
+- 🌙 Dark Glass (Traditional iOS Dark)
+- ☀️ Light Mode (iOS Light)
+- 🌊 Ocean (Deep Blue Waters)
+- 🌅 Sunset (Purple & Orange)
+- 🌲 Forest (Natural Green)
+- 🌌 Midnight (Deep Space Blue)
+
+## Features
+
+- 📱 **iOS-Style Interface** - Native iOS look and feel with glass morphism effects
+- 🎨 **6 Stunning Themes** - Switch between themes with floating theme picker
+- ⚡ **Real-time Updates** - Cross-tab synchronization
+- 🔔 **Smart Notifications** - Browser notifications for expiring items (3, 8, 15 days)
+- 🔒 **Password Protection** - Secure items more than 15 days from expiry
+- 🗑️ **Trash Management** - Soft delete with restore functionality
+- 📊 **Statistics Dashboard** - Track your food waste reduction
+- 📅 **Calendar View** - Visual expiry date management
+- ♻️ **Auto-Delete** - Automatically remove expired items
+
 ## Quick start (local)
 
 1. Install dependencies
@@ -15,6 +35,7 @@ npm install
 
 ```properties
 DATABASE_URL='postgresql://username:password@db-host/dbname?sslmode=require'
+ADMIN_PASSWORD='your-secure-password'
 ```
 
 3. Run the development server (frontend + backend):

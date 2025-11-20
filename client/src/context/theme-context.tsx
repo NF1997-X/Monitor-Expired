@@ -1,36 +1,51 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+
+type Theme = 'dark-glass' | 'light' | 'ocean' | 'sunset' | 'forest' | 'midnight';
 
 type ThemeProviderProps = {
   children: React.ReactNode;
-  defaultTheme?: 'dark';
+  defaultTheme?: Theme;
   storageKey?: string;
 };
 
 type ThemeProviderState = {
-  theme: 'dark';
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
 };
 
 const initialState: ThemeProviderState = {
-  theme: 'dark',
+  theme: 'dark-glass',
+  setTheme: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'dark',
+  defaultTheme = 'dark-glass',
   storageKey = 'foodtracker-theme',
   ...props
 }: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  );
+
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light');
-    root.classList.add('dark');
-    localStorage.setItem(storageKey, 'dark');
-  }, [storageKey]);
+    
+    // Remove all theme classes
+    root.classList.remove('dark-glass', 'light', 'ocean', 'sunset', 'forest', 'midnight');
+    
+    // Add current theme
+    root.classList.add(theme);
+    localStorage.setItem(storageKey, theme);
+  }, [theme, storageKey]);
 
   const value = {
-    theme: 'dark' as const,
+    theme,
+    setTheme: (newTheme: Theme) => {
+      setTheme(newTheme);
+    },
   };
 
   return (
