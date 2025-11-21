@@ -9,7 +9,7 @@ interface CalendarModalProps {
   foodItems: FoodItem[];
 }
 
-const TRANSITION_DURATION = 600;
+const TRANSITION_DURATION = 1200;
 
 export default function CalendarModal({ isOpen, onClose, foodItems }: CalendarModalProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -18,8 +18,36 @@ export default function CalendarModal({ isOpen, onClose, foodItems }: CalendarMo
   const [isEntering, setIsEntering] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | ''>('');
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const secondTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      goToNextMonth();
+    } else if (isRightSwipe) {
+      goToPreviousMonth();
+    }
+  };
 
   // Cleanup timers when modal closes or unmounts
   useEffect(() => {
@@ -61,8 +89,8 @@ export default function CalendarModal({ isOpen, onClose, foodItems }: CalendarMo
       secondTimeoutRef.current = setTimeout(() => {
         setIsEntering(false);
         setSlideDirection('');
-      }, TRANSITION_DURATION / 2);
-    }, TRANSITION_DURATION / 2);
+      }, TRANSITION_DURATION / 2.5);
+    }, TRANSITION_DURATION / 2.5);
   };
 
   const goToNextMonth = () => {
@@ -80,8 +108,8 @@ export default function CalendarModal({ isOpen, onClose, foodItems }: CalendarMo
       secondTimeoutRef.current = setTimeout(() => {
         setIsEntering(false);
         setSlideDirection('');
-      }, TRANSITION_DURATION / 2);
-    }, TRANSITION_DURATION / 2);
+      }, TRANSITION_DURATION / 2.5);
+    }, TRANSITION_DURATION / 2.5);
   };
 
   const getItemsForDate = (date: Date) => {
@@ -149,13 +177,22 @@ export default function CalendarModal({ isOpen, onClose, foodItems }: CalendarMo
         </div>
 
         {/* Calendar Grid */}
-        <div className={`grid grid-cols-7 gap-1 mb-6 transform transition-all ease-out ${
-          isTransitioning 
-            ? slideDirection === 'left' 
-              ? '-translate-x-full opacity-0' 
-              : 'translate-x-full opacity-0'
-            : 'translate-x-0 opacity-100'
-        }`} style={{ transitionDuration: `${TRANSITION_DURATION / 2}ms` }}>
+        <div 
+          className={`grid grid-cols-7 gap-1 mb-6 transform transition-all ${
+            isTransitioning 
+              ? slideDirection === 'left' 
+                ? '-translate-x-full opacity-0' 
+                : 'translate-x-full opacity-0'
+              : 'translate-x-0 opacity-100'
+          }`} 
+          style={{ 
+            transitionDuration: `${TRANSITION_DURATION / 2}ms`,
+            transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {daysInMonth.map(date => {
             const itemsForDate = getItemsForDate(date);
             const hasItems = itemsForDate.length > 0;

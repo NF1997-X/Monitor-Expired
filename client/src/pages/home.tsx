@@ -6,15 +6,20 @@ import {
   Bell,
   List,
   Trash2,
-  Home as HomeIcon,
   Calendar,
   TrendingUp,
   User,
   Info,
-  Utensils,
   PackageOpen,
+  ChevronDown,
+  Home as HomeIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { FoodItem, InsertFoodItem } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,7 +33,7 @@ import ProfileModal from "@/components/profile-modal";
 import DescriptionModal from "@/components/description-modal";
 import PasswordModal from "@/components/password-modal";
 import Notification from "@/components/notification";
-import ThemeSwitcher from "@/components/theme-switcher";
+import { NotificationModal } from "@/components/notification-modal";
 import {
   requestNotificationPermission,
   scheduleExpiryNotifications,
@@ -58,6 +63,8 @@ export default function Home() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [viewedNotifications, setViewedNotifications] = useState<Set<string>>(new Set());
   const [passwordAction, setPasswordAction] = useState<{ type: 'edit' | 'delete', item: FoodItem } | null>(null);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -66,6 +73,7 @@ export default function Home() {
   
   // Create BroadcastChannel for cross-tab communication
   const broadcastChannel = useRef<BroadcastChannel | null>(null);
+  const notificationBellRef = useRef<HTMLButtonElement>(null);
 
   // Initialize BroadcastChannel for cross-tab communication
   useEffect(() => {
@@ -509,61 +517,23 @@ export default function Home() {
     showNotification("All data cleared", "warning");
   };
 
-  const hasExpiringItems = foodItems.some((item) => {
+  const expiringItems = foodItems.filter((item) => {
     const daysUntilExpiry = Math.ceil(
       (new Date(item.expiryDate).getTime() - new Date().getTime()) /
         (1000 * 60 * 60 * 24),
     );
-    return daysUntilExpiry <= 3;
+    return daysUntilExpiry <= 3 && daysUntilExpiry >= 0;
   });
 
-  const handleNotificationClick = () => {
-    if ("Notification" in window) {
-      const NotificationAPI = window.Notification;
-      if (NotificationAPI.permission === "default") {
-        NotificationAPI.requestPermission().then(
-          (permission: NotificationPermission) => {
-            if (permission === "granted") {
-              showNotification(
-                "Notifications enabled! You'll get alerts for expiring items.",
-                "success",
-              );
-            } else {
-              showNotification(
-                "Notifications blocked. Enable them in browser settings for expiry alerts.",
-                "warning",
-              );
-            }
-          },
-        );
-      } else if (NotificationAPI.permission === "granted") {
-        // Show current expiring items
-        const expiringItems = foodItems.filter((item) => {
-          const daysUntilExpiry = Math.ceil(
-            (new Date(item.expiryDate).getTime() - new Date().getTime()) /
-              (1000 * 60 * 60 * 24),
-          );
-          return daysUntilExpiry <= 3 && daysUntilExpiry >= 0;
-        });
+  const unviewedExpiringItems = expiringItems.filter(item => !viewedNotifications.has(item.id));
+  const expiringItemsCount = unviewedExpiringItems.length;
 
-        if (expiringItems.length > 0) {
-          const itemNames = expiringItems.map((item) => item.name).join(", ");
-          showNotification(
-            `${expiringItems.length} item(s) expiring soon: ${itemNames}`,
-            "warning",
-          );
-        } else {
-          showNotification("No items expiring in the next 3 days!", "success");
-        }
-      } else {
-        showNotification(
-          "Notifications are blocked. Enable them in browser settings.",
-          "warning",
-        );
-      }
-    } else {
-      showNotification("Browser doesn't support notifications", "error");
-    }
+  const handleNotificationClick = () => {
+    setIsNotificationModalOpen(true);
+    // Mark all current expiring items as viewed
+    const newViewed = new Set(viewedNotifications);
+    expiringItems.forEach(item => newViewed.add(item.id));
+    setViewedNotifications(newViewed);
   };
 
   // Helper function to group food items by expiration month
@@ -618,8 +588,11 @@ export default function Home() {
       <header className="glass-dark p-4 sticky top-0 z-40 animate-slide-up">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <Utensils className="w-4 h-4 text-primary" />
-            <h5 className="text-sm font-semibold">FoodTracker</h5>
+            <img 
+              src="/FamilyMart.png" 
+              alt="FamilyMart" 
+              className="h-12 w-auto object-contain"
+            />
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -630,18 +603,20 @@ export default function Home() {
               <Info className="w-4 h-4 transition-transform hover:rotate-12" />
             </button>
             <button
-              className={`relative p-2 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-full ${hasExpiringItems ? 'animate-[notification-glow_2s_ease-in-out_infinite]' : ''}`}
+              ref={notificationBellRef}
+              className={`relative p-2 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-full ${expiringItemsCount > 0 ? 'animate-[notification-glow_2s_ease-in-out_infinite]' : ''}`}
               onClick={handleNotificationClick}
               data-testid="notification-bell"
             >
-              <Bell className={`w-4 h-4 transition-transform hover:rotate-12 ${hasExpiringItems ? 'animate-[notification-pulse_1.5s_ease-in-out_infinite]' : ''}`} />
-              {hasExpiringItems && <div className="notification-dot animate-[notification-pulse_1s_ease-in-out_infinite]"></div>}
-            </button>
-            <button
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-              data-testid="home-icon"
-            >
-              <HomeIcon className="w-4 h-4 transition-transform hover:rotate-12" />
+              <Bell className={`w-4 h-4 transition-transform hover:rotate-12 ${expiringItemsCount > 0 ? 'animate-[notification-pulse_1.5s_ease-in-out_infinite]' : ''}`} />
+              {expiringItemsCount > 0 && (
+                <>
+                  <div className="notification-dot animate-[notification-pulse_1s_ease-in-out_infinite]"></div>
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-[notification-pulse_1s_ease-in-out_infinite]">
+                    {expiringItemsCount}
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -656,25 +631,27 @@ export default function Home() {
       >
         <div className="glass rounded-lg p-1 flex">
           <button
-            className={`flex-1 py-2 px-3 text-xs font-medium rounded transition-all flex items-center justify-center space-x-1 ${
+            className={`flex-1 py-2 px-3 font-medium rounded transition-all flex items-center justify-center space-x-1 ${
               activeTab === "active"
-                ? "bg-primary/20 text-primary"
+                ? "text-blue-400"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             onClick={() => setActiveTab("active")}
             data-testid="active-tab"
+            style={{ fontSize: '11px' }}
           >
             <List className="w-3 h-3" />
             <span>Active Items</span>
           </button>
           <button
-            className={`flex-1 py-2 px-3 text-xs font-medium rounded transition-all flex items-center justify-center space-x-1 ${
+            className={`flex-1 py-2 px-3 font-medium rounded transition-all flex items-center justify-center space-x-1 ${
               activeTab === "trash"
-                ? "bg-primary/20 text-primary"
+                ? "text-red-400"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             onClick={() => setActiveTab("trash")}
             data-testid="trash-tab"
+            style={{ fontSize: '11px' }}
           >
             <Trash2 className="w-3 h-3" />
             <span>Trash</span>
@@ -690,11 +667,12 @@ export default function Home() {
         {activeTab === "active" && (
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium text-muted-foreground">
+              <h2 className="font-medium text-muted-foreground" style={{ fontSize: '11px' }}>
                 Food Items
               </h2>
               <span
-                className="text-xs text-muted-foreground"
+                className="text-muted-foreground"
+                style={{ fontSize: '11px' }}
                 data-testid="item-count"
               >
                 {foodItems.length} items
@@ -728,32 +706,44 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-6">
-                {groupItemsByMonth(foodItems).map((group) => (
-                  <div key={group.monthLabel} className="space-y-3">
-                    {/* Month Header */}
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-foreground flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-primary" />
-                        <span>{group.monthLabel}</span>
-                      </h3>
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
-                        {group.items.length} items
-                      </span>
-                    </div>
-                    
-                    {/* Items in this month */}
-                    <div className="space-y-3 pl-6 border-l-2 border-primary/20">
-                      {group.items.map((item) => (
-                        <FoodItemCard
-                          key={item.id}
-                          item={item}
-                          onEdit={handleEditItem}
-                          onDelete={handleDeleteItem}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                {groupItemsByMonth(foodItems).map((group, index) => {
+                  const currentMonth = format(new Date(), 'MMMM yyyy');
+                  const isCurrentMonth = group.monthLabel === currentMonth;
+                  
+                  return (
+                    <Collapsible key={group.monthLabel} defaultOpen={isCurrentMonth}>
+                      <div className="space-y-3">
+                        {/* Month Header */}
+                        <CollapsibleTrigger asChild>
+                          <button className="w-full flex items-center justify-between hover:opacity-80 transition-opacity">
+                            <h3 className="font-semibold text-foreground flex items-center space-x-2" style={{ fontSize: '11px' }}>
+                              <Calendar className="w-4 h-4 text-primary" />
+                              <span>{group.monthLabel}</span>
+                              <ChevronDown className="w-3 h-3 text-muted-foreground transition-transform duration-200" />
+                            </h3>
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
+                              {group.items.length} items
+                            </span>
+                          </button>
+                        </CollapsibleTrigger>
+                        
+                        {/* Items in this month */}
+                        <CollapsibleContent>
+                          <div className="space-y-3 pl-6 border-l-2 border-primary/20">
+                            {group.items.map((item) => (
+                              <FoodItemCard
+                                key={item.id}
+                                item={item}
+                                onEdit={handleEditItem}
+                                onDelete={handleDeleteItem}
+                              />
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -826,6 +816,14 @@ export default function Home() {
           >
             <Calendar className="w-4 h-4 mb-1" />
             <span className="text-xs">Calendar</span>
+          </button>
+          <button
+            className="flex flex-col items-center py-2 px-3 text-primary hover:text-primary/80 transition-colors duration-200"
+            onClick={() => setIsAddModalOpen(true)}
+            data-testid="nav-add"
+          >
+            <Plus className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Add Item</span>
           </button>
           <button
             className="flex flex-col items-center py-2 px-3 text-muted-foreground hover:text-foreground transition-colors duration-200"
@@ -902,8 +900,12 @@ export default function Home() {
         onClearAllData={handleClearAllData}
       />
 
-      {/* Theme Switcher */}
-      <ThemeSwitcher />
+      <NotificationModal
+        open={isNotificationModalOpen}
+        onOpenChange={setIsNotificationModalOpen}
+        expiringItems={expiringItems}
+        triggerRef={notificationBellRef}
+      />
     </div>
   );
 }

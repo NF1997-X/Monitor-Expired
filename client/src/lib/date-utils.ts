@@ -1,4 +1,4 @@
-import { differenceInDays, format, isAfter, parseISO } from "date-fns";
+import { differenceInDays, differenceInHours, format, isAfter, parseISO } from "date-fns";
 
 export function getDaysUntilExpiry(expiryDate: string | Date): number {
   try {
@@ -8,6 +8,19 @@ export function getDaysUntilExpiry(expiryDate: string | Date): number {
     }
     const today = new Date();
     return differenceInDays(expiry, today);
+  } catch (error) {
+    return 0;
+  }
+}
+
+export function getHoursUntilExpiry(expiryDate: string | Date): number {
+  try {
+    const expiry = typeof expiryDate === 'string' ? parseISO(expiryDate) : expiryDate;
+    if (isNaN(expiry.getTime())) {
+      return 0;
+    }
+    const now = new Date();
+    return differenceInHours(expiry, now);
   } catch (error) {
     return 0;
   }

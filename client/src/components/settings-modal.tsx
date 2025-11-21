@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, Download, Info, Trash2, Key } from "lucide-react";
+import { X, Download, Info, Trash2, Key, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/queryClient";
+import { useTheme } from "@/context/theme-context";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface Settings {
 }
 
 export default function SettingsModal({ isOpen, onClose, onClearAllData }: SettingsModalProps) {
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<Settings>({
     pushNotifications: true,
     warningDays15: true,
@@ -113,6 +115,15 @@ export default function SettingsModal({ isOpen, onClose, onClearAllData }: Setti
 
   if (!isOpen) return null;
 
+  const themes = [
+    { value: 'dark-glass', label: 'Dark Glass', gradient: 'from-gray-900 to-gray-800' },
+    { value: 'light', label: 'Light', gradient: 'from-gray-100 to-white' },
+    { value: 'ocean', label: 'Ocean', gradient: 'from-blue-600 to-cyan-500' },
+    { value: 'sunset', label: 'Sunset', gradient: 'from-orange-500 to-pink-500' },
+    { value: 'forest', label: 'Forest', gradient: 'from-green-600 to-emerald-500' },
+    { value: 'midnight', label: 'Midnight', gradient: 'from-indigo-900 to-purple-800' },
+  ];
+
   return (
     <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 animate-fade-in" data-testid="settings-modal">
       <div className="glass-dark rounded-lg p-6 m-4 w-full max-w-sm max-h-[90vh] overflow-y-auto transform transition-all duration-300 animate-slide-up scale-100 hover:scale-105">
@@ -128,6 +139,32 @@ export default function SettingsModal({ isOpen, onClose, onClearAllData }: Setti
         </div>
 
         <div className="space-y-4">
+          
+          {/* Theme Selector */}
+          <div className="space-y-3">
+            <span className="text-sm font-medium">App Theme</span>
+            <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+              {themes.map((themeOption) => (
+                <button
+                  key={themeOption.value}
+                  onClick={() => setTheme(themeOption.value as any)}
+                  className={`relative glass rounded-lg p-3 transition-all duration-200 hover:scale-105 ${
+                    theme === themeOption.value ? 'ring-2 ring-primary' : ''
+                  }`}
+                >
+                  <div className={`h-12 rounded-md bg-gradient-to-br ${themeOption.gradient} mb-2`} />
+                  <span className="text-xs font-medium block text-center">{themeOption.label}</span>
+                  {theme === themeOption.value && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                      <Check className="w-3 h-3" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <hr className="border-border my-4" />
 
           <div className="flex items-center justify-between">
             <span className="text-sm">Push Notifications</span>

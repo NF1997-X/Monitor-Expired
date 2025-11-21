@@ -180,25 +180,25 @@ export default function AddEditModal({
       className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 animate-fade-in p-4"
       data-testid="add-edit-modal"
     >
-      <div className="glass-dark rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-sm max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-slide-up mx-auto">
+      <div className="glass-dark rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto animate-slide-up shadow-2xl border border-white/10">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-foreground" data-testid="modal-title">
-            {editingItem ? "Edit Food Item" : "Add Food Item"}
+          <h3 className="text-lg font-semibold" data-testid="modal-title">
+            {editingItem ? "✏️ Edit Item" : "➕ Add New Item"}
           </h3>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-background/50"
+            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-white/10"
             data-testid="close-modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label
               htmlFor="itemName"
-              className="block text-sm font-medium mb-2"
+              className="block text-xs font-medium mb-2"
             >
               Item Name
             </Label>
@@ -216,24 +216,23 @@ export default function AddEditModal({
                   setOpen(newFilteredSuggestions.length > 0 && formData.name.trim() !== "");
                 }}
                 onBlur={() => {
-                  // Delay closing to allow clicking on suggestions
                   setTimeout(() => setOpen(false), 150);
                 }}
                 required
-                className={`bg-input border-border ${isDuplicateItem() ? "border-destructive" : ""}`}
+                className={`glass text-sm ${isDuplicateItem() ? "border-destructive" : ""}`}
                 data-testid="input-name"
               />
               {open && shouldShowDropdown && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover p-1 shadow-md">
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-auto rounded-lg glass p-1 shadow-lg border border-white/10">
                   {filteredSuggestions.map((item) => (
                     <div
                       key={item}
-                      className="relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                      className="relative flex cursor-pointer items-center rounded-md px-3 py-2 text-sm hover:bg-white/10 transition-colors"
                       onClick={() => {
                         handleInputChange("name", item);
                         setOpen(false);
                       }}
-                      onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking
+                      onMouseDown={(e) => e.preventDefault()}
                     >
                       {item}
                     </div>
@@ -242,8 +241,8 @@ export default function AddEditModal({
               )}
             </div>
             {isDuplicateItem() && (
-              <p className="text-xs text-destructive mt-1">
-                This item name and expiry date combination already exists
+              <p className="text-[10px] text-destructive mt-1.5">
+                ⚠️ This item and date combination already exists
               </p>
             )}
           </div>
@@ -251,7 +250,7 @@ export default function AddEditModal({
           <div>
             <Label
               htmlFor="itemDate"
-              className="block text-sm font-medium mb-2"
+              className="block text-xs font-medium mb-2"
             >
               Expiration Date
             </Label>
@@ -261,17 +260,12 @@ export default function AddEditModal({
               value={formatDateForInput(formData.expiryDate)}
               onChange={(e) => handleInputChange("expiryDate", e.target.value)}
               required
-              className={`bg-input border-border ${isPastDate() || isDuplicateItem() ? "border-destructive" : ""}`}
+              className={`glass text-sm ${isPastDate() || isDuplicateItem() ? "border-destructive" : ""}`}
               data-testid="input-date"
             />
             {isPastDate() && (
-              <p className="text-xs text-destructive mt-1">
-                Expiry date cannot be in the past
-              </p>
-            )}
-            {isDuplicateItem() && (
-              <p className="text-xs text-destructive mt-1">
-                This item name and expiry date combination already exists
+              <p className="text-[10px] text-destructive mt-1.5">
+                ⚠️ Expiry date cannot be in the past
               </p>
             )}
           </div>
@@ -279,7 +273,7 @@ export default function AddEditModal({
           <div>
             <Label
               htmlFor="itemCategory"
-              className="block text-sm font-medium mb-2"
+              className="block text-xs font-medium mb-2"
             >
               Category
             </Label>
@@ -288,14 +282,18 @@ export default function AddEditModal({
               onValueChange={(value) => handleInputChange("category", value)}
             >
               <SelectTrigger
-                className="bg-input border-border"
+                className="glass text-sm"
                 data-testid="select-category"
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="glass-dark border border-white/10">
                 {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
+                  <SelectItem 
+                    key={category.value} 
+                    value={category.value}
+                    className="text-sm hover:bg-white/10"
+                  >
                     {category.label}
                   </SelectItem>
                 ))}
@@ -306,7 +304,7 @@ export default function AddEditModal({
           <div>
             <Label
               htmlFor="itemNotes"
-              className="block text-sm font-medium mb-2"
+              className="block text-xs font-medium mb-2"
             >
               Notes (Optional)
             </Label>
@@ -315,29 +313,29 @@ export default function AddEditModal({
               placeholder="Add any notes..."
               value={formData.notes || ""}
               onChange={(e) => handleInputChange("notes", e.target.value)}
-              rows={2}
-              className="bg-input border-border resize-none"
+              rows={3}
+              className="glass resize-none text-sm"
               data-testid="input-notes"
             />
           </div>
 
-          <div className="flex space-x-3 mt-6">
+          <div className="flex space-x-3 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1 h-11"
+              className="flex-1 glass border-white/20 hover:bg-white/10 text-sm"
               data-testid="cancel-button"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 h-11 bg-primary hover:bg-primary/90"
+              className="flex-1 bg-primary hover:bg-primary/90 text-sm font-medium"
               disabled={!isFormValid()}
               data-testid="save-button"
             >
-              {editingItem ? "Update Item" : "Save Item"}
+              {editingItem ? "💾 Update" : "✅ Save"}
             </Button>
           </div>
         </form>
