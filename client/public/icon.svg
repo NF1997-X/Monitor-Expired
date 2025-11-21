@@ -1,0 +1,6 @@
+<!-- SVG Icon Placeholder - Replace with actual PNG icons -->
+<!-- This is a temporary placeholder. Generate proper icon-192.png and icon-512.png -->
+<svg width="192" height="192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#1a1a1a" rx="42"/>
+  <text x="96" y="110" font-family="Arial" font-size="80" fill="#fff" text-anchor="middle">🍱</text>
+</svg>
