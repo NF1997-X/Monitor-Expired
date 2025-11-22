@@ -15,7 +15,7 @@ const themes = [
     id: 'light' as const,
     name: 'Light',
     description: 'iOS Light Mode',
-    preview: 'linear-gradient(135deg, hsl(0, 0%, 98%), hsl(210, 20%, 96%))',
+    preview: 'linear-gradient(135deg, hsl(210, 30%, 98%), hsl(220, 40%, 96%), hsl(210, 35%, 97%))',
     icon: '☀️',
   },
   {
