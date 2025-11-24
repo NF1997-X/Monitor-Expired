@@ -786,7 +786,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* Bottom Navigation */
+      {/* Bottom Navigation */}
       <nav
         className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-dark p-2 animate-slide-up"
         style={{ animationDelay: "0.6s" }}
