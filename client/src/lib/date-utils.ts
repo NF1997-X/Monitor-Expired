@@ -102,19 +102,18 @@ export function getDaysUntilTrashClear(deletedAt: string | Date): number {
 export function getCalendarDays(year: number, month: number): Array<{ day: number; isCurrentMonth: boolean; date: Date }> {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const startDate = new Date(firstDay);
-  startDate.setDate(firstDay.getDate() - firstDay.getDay());
+  const daysInMonth = lastDay.getDate();
   
   const days = [];
-  const currentDate = new Date(startDate);
   
-  for (let i = 0; i < 42; i++) {
+  // Only include days from the current month
+  for (let i = 1; i <= daysInMonth; i++) {
+    const currentDate = new Date(year, month, i);
     days.push({
-      day: currentDate.getDate(),
-      isCurrentMonth: currentDate.getMonth() === month,
-      date: new Date(currentDate)
+      day: i,
+      isCurrentMonth: true,
+      date: currentDate
     });
-    currentDate.setDate(currentDate.getDate() + 1);
   }
   
   return days;

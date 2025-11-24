@@ -67,17 +67,19 @@ export default function MiniCalendar({ selectedDate, onDateSelect }: MiniCalenda
     }, 400);
   };
 
-  const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  // Calculate grid columns based on number of days
+  const daysInMonth = days.length;
+  const gridCols = 7; // 7 days per week
   
   return (
     <div 
-      className="glass rounded-lg p-3 transform transition-all duration-300 hover:scale-105" 
+      className="glass rounded-lg p-2 transform transition-all duration-300 hover:scale-105" 
       data-testid="mini-calendar"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1.5">
         <h3 className="font-medium" style={{ fontSize: '11px' }} data-testid="current-month">
           {format(currentDate, 'MMMM yyyy')}
         </h3>
@@ -100,21 +102,21 @@ export default function MiniCalendar({ selectedDate, onDateSelect }: MiniCalenda
       </div>
       
       <div 
-        className={`calendar-grid transform transition-all duration-[800ms] ${
+        className={`transform transition-all duration-[800ms] ${
           isTransitioning 
             ? slideDirection === 'left' 
               ? '-translate-x-full opacity-0' 
               : 'translate-x-full opacity-0'
             : 'translate-x-0 opacity-100'
         }`}
-        style={{ transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fontSize: '10px' }}
+        style={{ 
+          transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)', 
+          fontSize: '10px',
+          display: 'grid',
+          gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+          gap: '2px'
+        }}
       >
-        {weekdays.map((day, index) => (
-          <div key={`weekday-${index}`} className="text-center text-muted-foreground py-1">
-            {day}
-          </div>
-        ))}
-        
         {days.map((day, index) => {
           const isSelected = selectedDate && 
             day.date.toDateString() === selectedDate.toDateString();
@@ -123,9 +125,9 @@ export default function MiniCalendar({ selectedDate, onDateSelect }: MiniCalenda
           return (
             <button
               key={index}
-              className={`text-center py-1 hover:bg-white/10 rounded cursor-pointer transition-colors ${
-                !day.isCurrentMonth ? 'text-muted-foreground/50' : ''
-              } ${isSelected ? 'bg-primary/20 text-primary' : ''} ${
+              className={`text-center py-0.5 px-1 hover:bg-white/10 rounded cursor-pointer transition-colors ${
+                isSelected ? 'bg-primary/20 text-primary' : ''
+              } ${
                 isTodayDate && !isSelected ? 'bg-primary/10 text-primary font-semibold border border-primary/30' : ''
               }`}
               onClick={() => onDateSelect?.(day.date)}
