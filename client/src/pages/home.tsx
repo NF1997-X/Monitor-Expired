@@ -786,17 +786,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* Floating Action Button */}
-      <Button
-        className="fixed bottom-20 right-4 p-3 rounded-full shadow-lg glass animate-fade-in"
-        style={{ animationDelay: "0.8s" }}
-        onClick={() => setIsAddModalOpen(true)}
-        data-testid="add-item-fab"
-      >
-        <Plus className="w-5 h-5" />
-      </Button>
-
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation */
       <nav
         className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-dark p-2 animate-slide-up"
         style={{ animationDelay: "0.6s" }}

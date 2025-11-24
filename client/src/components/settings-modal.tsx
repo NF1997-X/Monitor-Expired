@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/context/theme-context";
+import { APP_VERSION } from "@/lib/pwa";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -321,6 +322,19 @@ export default function SettingsModal({ isOpen, onClose, onClearAllData }: Setti
             <Trash2 className="w-4 h-4 mr-2" />
             Clear All Data
           </Button>
+
+          {/* App Version */}
+          <div className="pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>App Version</span>
+              <span className="font-mono bg-primary/10 text-primary px-2 py-1 rounded">
+                v{APP_VERSION}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              Monitor Expired PWA
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -48,7 +48,7 @@ export default function FoodItemCard({
     
     return (
       <Collapsible open={isDeletedOpen} onOpenChange={setIsDeletedOpen}>
-        <div className="glass rounded-lg p-3 opacity-70 animate-fade-in" data-testid={`deleted-item-${item.id}`}>
+        <div className="glass rounded-lg p-2.5 opacity-70 animate-fade-in" data-testid={`deleted-item-${item.id}`}>
           <CollapsibleTrigger asChild>
             <button className="w-full flex items-center justify-between hover:opacity-80 transition-opacity">
               <h3 className="font-medium line-through" style={{ fontSize: '9px' }} data-testid="item-name">
@@ -57,8 +57,8 @@ export default function FoodItemCard({
               <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${isDeletedOpen ? 'rotate-180' : ''}`} />
             </button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2 pt-2 border-t border-white/10">
-            <div className="space-y-2">
+          <CollapsibleContent className="mt-1.5 pt-1.5 border-t border-white/10">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Deleted:</span>
                 <span className="text-foreground">{item.deletedAt ? formatExpiryDate(item.deletedAt) : 'Unknown'}</span>
@@ -71,10 +71,10 @@ export default function FoodItemCard({
                   }
                 </span>
               </div>
-              <div className="flex items-center space-x-2 pt-2">
+              <div className="flex items-center space-x-2 pt-1.5">
                 {!itemExpired && (
                   <button 
-                    className="flex-1 p-2 hover:bg-green-500/20 rounded text-xs transition-colors duration-200 flex items-center justify-center space-x-1"
+                    className="flex-1 p-1.5 hover:bg-green-500/20 rounded text-xs transition-colors duration-200 flex items-center justify-center space-x-1"
                     onClick={() => onRestore?.(item.id)}
                     data-testid={`restore-item-${item.id}`}
                   >
@@ -83,7 +83,7 @@ export default function FoodItemCard({
                   </button>
                 )}
                 <button 
-                  className="flex-1 p-2 hover:bg-red-500/20 rounded text-xs transition-colors duration-200 flex items-center justify-center space-x-1"
+                  className="flex-1 p-1.5 hover:bg-red-500/20 rounded text-xs transition-colors duration-200 flex items-center justify-center space-x-1"
                   onClick={() => onPermanentDelete?.(item.id)}
                   data-testid={`permanent-delete-${item.id}`}
                 >
@@ -100,13 +100,13 @@ export default function FoodItemCard({
   
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <div className="glass rounded-lg p-3 animate-fade-in" data-testid={`food-item-${item.id}`}>
+      <div className="glass rounded-lg p-2.5 animate-fade-in" data-testid={`food-item-${item.id}`}>
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between hover:opacity-80 transition-opacity">
+          <button className="w-full flex items-center justify-between hover:opacity-80 transition-opacity py-0.5">
             <h3 className="font-medium" style={{ fontSize: '9px' }} data-testid="item-name">
               {item.name}
             </h3>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
               <span 
                 className={`countdown-badge ${status}`}
                 data-testid="countdown-badge"
@@ -117,8 +117,8 @@ export default function FoodItemCard({
             </div>
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2 pt-2 border-t border-white/10">
-          <div className="space-y-2">
+        <CollapsibleContent className="mt-1.5 pt-1.5 border-t border-white/10">
+          <div className="space-y-1.5">
             <div className="flex justify-between items-center" style={{ fontSize: '10px' }}>
               <span className="text-muted-foreground">Expires:</span>
               <span className="text-foreground">{formatExpiryDate(item.expiryDate)}</span>
@@ -135,9 +135,9 @@ export default function FoodItemCard({
                 <p className="text-foreground mt-1 leading-relaxed">{item.notes}</p>
               </div>
             )}
-            <div className="flex items-center space-x-2 pt-2">
+            <div className="flex items-center space-x-2 pt-1.5">
               <button 
-                className="flex-1 p-2 hover:bg-white/10 rounded transition-colors duration-200 flex items-center justify-center space-x-1"
+                className="flex-1 p-1.5 hover:bg-white/10 rounded transition-colors duration-200 flex items-center justify-center space-x-1"
                 onClick={() => onEdit?.(item)}
                 data-testid={`edit-item-${item.id}`}
                 style={{ fontSize: '10px' }}
@@ -146,7 +146,7 @@ export default function FoodItemCard({
                 <span>Edit</span>
               </button>
               <button 
-                className="flex-1 p-2 hover:bg-red-500/20 rounded transition-colors duration-200 flex items-center justify-center space-x-1"
+                className="flex-1 p-1.5 hover:bg-red-500/20 rounded transition-colors duration-200 flex items-center justify-center space-x-1"
                 onClick={() => onDelete?.(item.id)}
                 data-testid={`delete-item-${item.id}`}
                 style={{ fontSize: '10px' }}

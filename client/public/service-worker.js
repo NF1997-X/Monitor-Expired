@@ -1,80 +1,104 @@
-// Service Worker for Monitor Expired PWA
-const CACHE_NAME = 'monitor-expired-v1';
+// Service Worker for Monitor Expired PWA v1.3.0
+const CACHE_VERSION = 'v1.3.0';
+const CACHE_NAME = `monitor-expired-${CACHE_VERSION}`;
+
 const urlsToCache = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/index.css',
-  '/FamilyMart.png',
-  '/manifest.json'
+  '/manifest.json',
+  '/exp-192.png',
+  '/exp-512.png'
 ];
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing service worker version:', CACHE_VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        console.log('[SW] Opened cache');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
-        console.log('Cache install failed:', error);
+        console.error('[SW] Cache install failed:', error);
       })
   );
+  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating service worker version:', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  self.clients.claim();
+  // Take control of all pages immediately
+  return self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // Cache hit - return response
-        if (response) {
+        // Check if valid response
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        
-        // Clone the request
-        const fetchRequest = event.request.clone();
-        
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+
+        // Clone the response
+        const responseToCache = response.clone();
+
+        // Cache the fetched response
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return response;
+      })
+      .catch(() => {
+        // Network failed, try cache
+        return caches.match(event.request).then((response) => {
+          if (response) {
             return response;
           }
-          
-          // Clone the response
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
-        }).catch(() => {
-          // Fallback for offline
-          return caches.match('/index.html');
+          // Fallback to index.html for navigation requests
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+          return new Response('Offline - Resource not available', {
+            status: 503,
+            statusText: 'Service Unavailable'
+          });
         });
       })
   );
+});
+
+// Message event - handle messages from clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_VERSION });
+  }
 });
 
 // Background sync for offline functionality
@@ -85,19 +109,41 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncData() {
-  // Sync any pending data when back online
-  console.log('Syncing data...');
+  console.log('[SW] Syncing data...');
+  // Implement data sync logic here
 }
 
 // Push notification support
 self.addEventListener('push', (event) => {
+  const title = 'Monitor Expired';
   const options = {
     body: event.data ? event.data.text() : 'Food item expiring soon!',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/exp-192.png',
+    badge: '/exp-192.png',
     vibrate: [200, 100, 200],
     tag: 'expiry-notification',
-    requireInteraction: true
+    requireInteraction: false,
+    actions: [
+      { action: 'view', title: 'View Items' },
+      { action: 'dismiss', title: 'Dismiss' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'view') {
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
+});
   };
   
   event.waitUntil(

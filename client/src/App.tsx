@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,8 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/context/theme-context";
 import LoadingScreen from "@/components/loading-screen";
+import PWAUpdatePrompt from "@/components/pwa-update-prompt";
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
+import { registerServiceWorker } from "@/lib/pwa";
 
 function Router() {
   return (
@@ -25,11 +27,17 @@ function App() {
     setIsLoading(false);
   };
 
+  // Register service worker on mount
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="foodtracker-theme">
         <TooltipProvider>
           <Toaster />
+          <PWAUpdatePrompt />
           {isLoading ? (
             <LoadingScreen onLoadingComplete={handleLoadingComplete} />
           ) : (
