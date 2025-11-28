@@ -1,8 +1,7 @@
-// Service Worker for Monitor Expired PWA v1.3.0
-const CACHE_VERSION = 'v1.3.0';
-const CACHE_NAME = `monitor-expired-${CACHE_VERSION}`;
-
-const urlsToCache = [
+// Service Worker for PWA functionality
+const CACHE_NAME = 'monitor-expired-v1.3.0';
+const RUNTIME_CACHE = 'monitor-expired-runtime-v1';
+const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
@@ -12,29 +11,25 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker version:', CACHE_VERSION);
+  console.log('[SW] Installing service worker version:', CACHE_NAME);
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .catch((error) => {
-        console.error('[SW] Cache install failed:', error);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
+        console.error('Cache installation failed:', err);
+      });
+    })
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
+  self.skipWaiting(); // Activate the new service worker immediately
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker version:', CACHE_VERSION);
+  console.log('[SW] Activating service worker version:', CACHE_NAME);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
             console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -42,12 +37,16 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Take control of all pages immediately
-  return self.clients.claim();
+  self.clients.claim(); // Take control of all pages immediately
 });
 
 // Fetch event - Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
@@ -56,48 +55,37 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Check if valid response
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+        // Only cache successful responses
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
         }
-
-        // Clone the response
-        const responseToCache = response.clone();
-
-        // Cache the fetched response
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
         return response;
       })
       .catch(() => {
-        // Network failed, try cache
-        return caches.match(event.request).then((response) => {
-          if (response) {
-            return response;
+        // If network fails, try cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
           }
-          // Fallback to index.html for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          return new Response('Offline - Resource not available', {
-            status: 503,
-            statusText: 'Service Unavailable'
-          });
+          // Return a basic offline page if nothing in cache
+          return new Response(
+            '<h1>Offline</h1><p>This content is not available offline.</p>',
+            {
+              headers: { 'Content-Type': 'text/html' },
+            }
+          );
         });
       })
   );
 });
 
-// Message event - handle messages from clients
+// Handle service worker messages (for skipWaiting)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
-  }
-  
-  if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: CACHE_VERSION });
   }
 });
 

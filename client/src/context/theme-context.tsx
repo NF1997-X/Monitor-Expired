@@ -14,7 +14,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-  theme: 'dark-glass',
+  theme: 'light',
   setTheme: () => null,
 };
 
@@ -22,7 +22,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'dark-glass',
+  defaultTheme = 'light',
   storageKey = 'foodtracker-theme',
   ...props
 }: ThemeProviderProps) {
