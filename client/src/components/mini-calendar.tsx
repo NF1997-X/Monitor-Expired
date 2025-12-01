@@ -71,7 +71,7 @@ export default function MiniCalendar({ selectedDate, onDateSelect }: MiniCalenda
   
   return (
     <div 
-      className="glass rounded-lg p-3 transform transition-all duration-300 hover:scale-105" 
+      className="rounded-lg p-3 transform transition-all duration-300 hover:scale-105 bg-transparent" 
       data-testid="mini-calendar"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
